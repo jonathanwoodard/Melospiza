@@ -58,3 +58,56 @@ def get_audio(audio_path, url):
                 errors.append(output)
             for block in response.iter_content(1024):
                 handle.write(block)
+
+
+def get_audio2(audio_path, url):
+    '''
+    INPUT:
+        audio_path: path to the directory where audio files will be written
+        url: base url from which audio files will be downloaded
+    '''
+    ids = []
+    errors = []
+    json_path = audio_path + "target"
+    for (_, _, filename) in os.walk(json_path):
+        for name in filename:
+            with open(json_path + '/' + name) as j:
+                temp = json.load(j)
+                for item in temp['recordings']:
+                    ids.append((item['id'], name))
+    for i in ids:
+        output = audio_path + '/' + i[1] + '/' + i[0] + '.mp3'
+        target_url = url + i[0] + '/download'
+        with open(output, 'wb') as handle:
+            response = requests.get(target_url, stream=True)
+            if not response.ok:
+                errors.append(output)
+            for block in response.iter_content(1024):
+                handle.write(block)
+
+
+def get_audio3(audio_path, url):
+    '''
+    INPUT:
+        audio_path: path to the directory where audio files will be written
+        url: base url from which audio files will be downloaded
+    '''
+    ids = []
+    errors = []
+    json_path = audio_path + "target"
+    for (_, _, filename) in os.walk(json_path):
+        for name in filename:
+            with open(json_path + '/' + name) as j:
+                temp = json.load(j)
+                for item in temp['recordings']:
+                    ids.append((item['id'], name))
+    for i in ids:
+        output = audio_path + '/' + i[1] + '/' + i[0] + '.mp3'
+        if not os.path.isfile(output):
+            target_url = url + i[0] + '/download'
+            with open(output, 'wb') as handle:
+                response = requests.get(target_url, stream=True)
+                if not response.ok:
+                    errors.append(output)
+                for block in response.iter_content(1024):
+                    handle.write(block)
