@@ -4,7 +4,7 @@ Module to transform signals
 """
 from __future__ import division
 import scipy
-import numpy
+import numpy as np
 import math
 import scipy.interpolate
 
@@ -51,7 +51,7 @@ def process(data, window=None, halved=True, transform=None, padding=0, **kwargs)
         data = data * window(len(data))
 
     if padding > 0:
-        data = numpy.hstack((data, numpy.zeros(len(data) * padding)))
+        data = np.hstack((data, np.zeros(len(data) * padding)))
 
     result = transform(data)
 
@@ -98,7 +98,7 @@ def iprocess(data, window=None, halved=True, transform=None, padding=0, **kwargs
         transform = scipy.ifft
 
     if halved:
-        data = numpy.hstack((data, data[-2:0:-1].conjugate()))
+        data = np.hstack((data, data[-2:0:-1].conjugate()))
 
     output = transform(data, **kwargs)
 
@@ -151,10 +151,10 @@ def spectrogram(data, framelength=1024, hopsize=None, overlap=None, **kwargs):
 
     def traf(data):
         # Pad input signal so it fits into framelength spec
-        data = numpy.hstack(
+        data = np.hstack(
             (
                 data,
-                numpy.zeros(
+                np.zeros(
                     math.ceil(len(data) / framelength) * framelength - len(data)
                 )
             )
@@ -168,7 +168,7 @@ def spectrogram(data, framelength=1024, hopsize=None, overlap=None, **kwargs):
             sig = process(data[i:i + framelength], **kwargs) / (framelength // hopsize // 2)
 
             if(i == 0):
-                output = numpy.zeros((sig.shape[0], len(values)), dtype=sig.dtype)
+                output = np.zeros((sig.shape[0], len(values)), dtype=sig.dtype)
 
             output[:, j] = sig
 
@@ -181,7 +181,7 @@ def spectrogram(data, framelength=1024, hopsize=None, overlap=None, **kwargs):
             tmp = traf(data[:, i])
 
             if i == 0:
-                out = numpy.empty((tmp.shape + (data.shape[1],)), dtype=tmp.dtype)
+                out = np.empty((tmp.shape + (data.shape[1],)), dtype=tmp.dtype)
             out[:, :, i] = tmp
         return out
     else:
@@ -237,7 +237,7 @@ def ispectrogram(data, framelength=1024, hopsize=None, overlap=None, **kwargs):
             sig = iprocess(data[:, j], **kwargs)
 
             if(i == 0):
-                output = numpy.zeros(
+                output = np.zeros(
                     framelength + (len(values) - 1) * hopsize,
                     dtype=sig.dtype
                 )
@@ -255,7 +255,7 @@ def ispectrogram(data, framelength=1024, hopsize=None, overlap=None, **kwargs):
             tmp = traf(data[:, :, i])
 
             if i == 0:
-                out = numpy.empty((tmp.shape + (data.shape[2],)), dtype=tmp.dtype)
+                out = np.empty((tmp.shape + (data.shape[2],)), dtype=tmp.dtype)
             out[:, i] = tmp
         return out
     else:
@@ -285,4 +285,4 @@ def cosine(M):
         import scipy.signal
         return scipy.signal.cosine(M)
     except AttributeError:
-        return numpy.sin(numpy.pi / M * (numpy.arange(0, M) + .5))
+        return np.sin(np.pi / M * (np.arange(0, M) + .5))
