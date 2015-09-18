@@ -4,6 +4,9 @@ import json
 import os
 from pydub import AudioSegment
 from scipy.io.wavfile import read
+import cPickle as pickle
+from functools import partial
+from multiprocessing.pool import Pool
 
 
 audio_path = '/media/jon/external_data/audio/'
@@ -55,35 +58,93 @@ def make_file_list(directory_list):
     return file_list
 
 
-def make_wav(file_list):
+def make_wav_list(directory_list):
     '''
     INPUT:
-        list of tuples containing input, output file names
+        list of tuples containing wav file directories
     OUTPUT:
-        wav files
+        list of tuples containing path and file_id for all wav files
     '''
-    while len(file_list) != 0:
-        f = file_list.pop()
-        sound = AudioSegment.from_mp3(f[0])
-        sound.export(f[1])
+    wav_list = []
+    for directory in directory_list:
+        for (_, _, filenames) in os.walk(directory[1]):
+            for file_id in filenames:
+                wav_file = (directory[1] + "/" + file_id)
+                wav_list.append((wav_file, file_id))
+    return wav_list
+
+npz_directory = '/media/jon/external_data/audio/pickles'
 
 
-def make_fft(wav_directory, csv_directory):
-    for (_, _, filenames) in os.walk(wav_directory):
-        for file_id in filenames:
-            a = read(file_id)
-            nparray = np.array(a[1], dtype=float)
-            f = np.fft.fft(nparray)
-            np.savetxt(csv_directory + "/" + file_id[:-3] + ".csv", f, delimiter=",")
+# def make_fft(wav_list, npz_directory):
+#     for item in wav_list:
+#         a = read(item[0])
+#         nparray = np.array(a[1], dtype=float)
+#         f = np.fft.fft(nparray)
+#         f.dump(npz_directory + item[1][:-3] + "npz")
 
 
+def make_fft(wav_list, npz_directory):
+    for item in wav_list:
+        a = read(item[0])
+        nparray = np.array(a[1], dtype=float)
+        f = np.fft.fft(nparray)
+        f_myfile = open((item[1][:-3] + "npz"), 'wb')
+        pickle.dump(f, f_myfile)
+        f_myfile.close()
+        # f.dump(npz_directory + item[1][:-3] + "npz")
 
-    wav_directory = mp3_directory + "_wav"
-    csv_directory = mp3_directory + "_csv"
-    wav_name = wav_directory + "/" + mp3_id[:-3] + "wav"
-    sound = AudioSegment.from_mp3(mp3_name)
-    sound.export(wav_name)
-    a = read(wav_name)
-    nparray = np.array(a[1], dtype=float)
-    f = np.fft.fft(nparray)
-    np.savetxt(csv_directory + "/" + name + ".csv", f, delimiter=",")
+
+def multi_fft(wav_list, npz_directory=npz_directory):
+    for item in wav_list:
+        a = read(item[0])
+        nparray = np.array(a[1], dtype=float)
+        f = np.fft.fft(nparray)
+        f_myfile = open((item[1][:-3] + "npz"), 'wb')
+        pickle.dump(f, f_myfile)
+        f_myfile.close()
+
+
+# stub - need to flesh this out
+# def main():
+#     ts = time()
+#     mkfft = partial(multi_fft)
+#     with Pool(8) as p:
+#         p.map(multi_fft, files)
+#
+#
+# if __name__ == "__main__":
+#     main()
+
+# pydub proved to be slow and error prone, and crashed frequently
+# files were converted using ffmpeg and a bash script
+# def make_wav(file_list):
+#     '''
+#     INPUT:
+#         list of tuples containing input, output file names
+#     OUTPUT:
+#         wav files
+#     '''
+#     while len(file_list) != 0:
+#         f = file_list.pop()
+#         sound = AudioSegment.from_mp3(f[0])
+#         sound.export(f[1])
+
+
+# def make_fft(wav_directory, csv_directory):
+#     for (_, _, filenames) in os.walk(wav_directory):
+#         for file_id in filenames:
+#             a = read(file_id)
+#             nparray = np.array(a[1], dtype=float)
+#             f = np.fft.fft(nparray)
+#             np.savetxt(csv_directory + "/" + file_id[:-3] + ".csv", f, delimiter=",")
+
+    # wav_directory = mp3_directory + "_wav"
+    # csv_directory = mp3_directory + "_csv"
+    # wav_name = wav_directory + "/" + mp3_id[:-3] + "wav"
+    # sound = AudioSegment.from_mp3(mp3_name)
+    # sound.export(wav_name)
+    # a = read(wav_name)
+    # nparray = np.array(a[1], dtype=float)
+    # f = np.fft.fft(nparray)
+    # np.savetxt(csv_directory + "/" + name + ".csv", f, delimiter=",")
