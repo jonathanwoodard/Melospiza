@@ -28,8 +28,9 @@ pip2.7 install pyzmq==14.6.0
 pip2.7 install jinja2==2.7.3
 pip2.7 install tornado==4.2
 
+pip2.7 install boto3
 pip2.7 install numpy
-# pip2.7 install sklearn
+pip2.7 install sklearn
 pip2.7 install scipy
 
 # Install on workers:
@@ -37,8 +38,9 @@ pip2.7 install scipy
 pssh -h /root/spark-ec2/slaves yum install -y python27 python27-devel
 pssh -h /root/spark-ec2/slaves "wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | python27"
 pssh -h /root/spark-ec2/slaves easy_install-2.7 pip
+pssh -h /root/spark-ec2/slaves pip2.7 install boto3
 pssh -t 10000 -h /root/spark-ec2/slaves pip2.7 install numpy
-# pssh -t 10000 -h /root/spark-ec2/slaves pip2.7 install sklearn
+pssh -t 10000 -h /root/spark-ec2/slaves pip2.7 install sklearn
 pssh -t 10000 -h /root/spark-ec2/slaves pip2.7 install scipy
 #
 # Start tmux
