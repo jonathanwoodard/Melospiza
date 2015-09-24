@@ -4,8 +4,16 @@ import json
 import os
 from pydub import AudioSegment
 from scipy.io.wavfile import read
+import stft
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import normalize
+from sklearn.decomposition import PCA
+import random
+import signal
 import cPickle as pickle
 from functools import partial
+import multiprocessing as mp
+import time
 from multiprocessing.pool import Pool
 
 
@@ -103,6 +111,109 @@ def multi_fft(wav_list, npz_directory=npz_directory):
         f_myfile = open((item[1][:-3] + "npz"), 'wb')
         pickle.dump(f, f_myfile)
         f_myfile.close()
+
+
+# def timeout(seconds=30):
+audio_path = "data/target_species/"
+species_list = ["Poecile_atricapillus",
+                "Poecile_rufescens",
+                "Regulus_calendula",
+                "Regulus_satrapa"]
+
+
+def file_list(path, species):
+    file_list = []
+    for sp in species:
+        for (_, _, filenames) in os.walk(path + sp + "_wav/"):
+            for f in filenames:
+                file_list.append(path + sp + "_wav/" + f)
+    return file_list
+
+
+def make_mono(file_list):
+    '''
+    overwrite wav files as mono - other functions will have errors with stereo files
+    '''
+    for f in file_list:
+        sound = AudioSegment.from_wav(f)
+        sound = sound.set_channels(1)
+        sound.export(f, format="wav")
+
+
+def make_spec(file_list):
+    '''
+    INPUT:
+        list of wav file - files will be converted to mono in function
+    OUTPUT:
+        dictionary with filename as key, spectrogram as value
+    '''
+    spectrograms = {}
+    for f in file_list:
+        sound = AudioSegment.from_wav(f)
+        sound = sound.set_channels(1)
+        sound.export("temp", format="wav")
+        a = read("temp")
+        arr = np.array(a[1], dtype=float)
+        spec = stft.spectrogram(arr)
+        spectrograms[f] = spec
+    return spectrograms
+
+
+def norm_spec(spectrograms):
+    '''
+    INPUT:
+        dict of file name: spectrogram
+    OUTPUT:
+        dict of file name: l2 normalized spectrogram
+    '''
+    for k, v in spectrograms:
+        spectrograms[k] = normalize(v, norm="l2")
+    return spectrograms
+
+
+def whiten(spectrograms):
+    '''
+    INPUT:
+        dict of file name: spectrogram
+    OUTPUT:
+        dict of file name: pca whitened spectrogram
+    '''
+    pca = PCA(n_components=40, copy=False, whiten=True)
+    for k, v in spectrograms:
+        spectrograms[k] = pca.fit_transform(v)
+
+
+def test_stft(file_list):
+    processed_files = []
+    problem_files = []
+    for f in file_list:
+        a = read(f)
+        arr = np.array(a[1], dtype=float)
+        try:
+            ft = stft.process(arr)
+            processed_files.append((ft, f))
+        except ValueError:
+            problem_files.append(f)
+    return processed_files, problem_files
+
+
+def usable_files(file_list, problem_list):
+    usable = []
+    usable.extend([f for f in file_list if f not in problem_list])
+    return usable
+
+
+def random_sample(species_files, n=10):
+    '''
+    INPUT:
+        a dict of species, file list pairs
+    OUTPUT:
+        a randomly selected list of n files from each species
+    '''
+    subset = []
+    for k, v in species_files:
+        subset.extend([v[i] for i in random.sample(xrange(len(v)))])
+    return subset
 
 
 # stub - need to flesh this out
