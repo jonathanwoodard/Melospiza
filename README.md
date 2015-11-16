@@ -1,5 +1,7 @@
 ## Melospiza is a birdsong classifier capable of identifying North American bird species from user recorded audio files.
 
+(https://github.com/jonathanwoodard/Melospiza/blob/master/flask_app/static/img/Screenshot.png)
+
 I am currently in the process of refactoring the code for this project, using the
 recently released TensorFlow (http://tensorflow.org) project, and a recurrent
 neural network for audio feature extraction.  Please check back soon!
@@ -38,4 +40,4 @@ Melospiza starts with an audio file in .mp3 or .wav format.  A Short Time Fourie
 Transform algorithm is used to generate a spectrogram, which is then transformed
 into a set of features using a Long Short Term Memory Recurrent Neural Network.
 ![spectrogram from Black-capped Chickadee] (https://github.com/jonathanwoodard/Melospiza/blob/master/flask_app/static/img/bcch_2_spec.png)
-                *spectrogram from Black-capped Chickadee*
+          *spectrogram from Black-capped Chickadee*
