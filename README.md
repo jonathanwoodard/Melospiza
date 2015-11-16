@@ -1,5 +1,6 @@
 ## Melospiza is a birdsong classifier capable of identifying North American bird species from user recorded audio files.
 
+![melospiza.net screenshot]
 (https://github.com/jonathanwoodard/Melospiza/blob/master/flask_app/static/img/Screenshot.png)
 
 I am currently in the process of refactoring the code for this project, using the
